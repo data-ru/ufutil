@@ -1,4 +1,4 @@
-module github.com/dataru/ufutil
+module github.com/data-ru/ufutil
 
 go 1.22.4
 
