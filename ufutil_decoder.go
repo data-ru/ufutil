@@ -8,7 +8,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"strings"
 
 	"golang.org/x/crypto/pbkdf2"
@@ -48,7 +47,7 @@ func generateKey(salt, passphrase string, keySize, iterationCount int) ([]byte, 
 	return key, nil
 }
 
-// Decrypt the given ciphertext using AES in CBC mode
+// Descriptografa o texto cifrado fornecido usando AES no modo CBC
 func decryptAES(salt, iv, passphrase, ciphertext string, keySize, iterationCount int) (string, error) {
 	key, err := generateKey(salt, passphrase, keySize, iterationCount)
 	if err != nil {
@@ -73,15 +72,14 @@ func decryptAES(salt, iv, passphrase, ciphertext string, keySize, iterationCount
 	return string(plainBytes), nil
 }
 
-// Remove PKCS7 padding
+// Remove o padding do PKCS7
 func pkcs7Unpad(data []byte, blockSize int) []byte {
-
 	length := len(data)
 	unpadding := int(data[length-1])
 	return data[:(length - unpadding)]
 }
 
-// Decrypt text using the passphrase
+// Descriptografa o texto usando a senha
 func decryptText(encryptedText, passphrase string) (string, error) {
 	const (
 		salt      = "3FF2EC019C627B945225DEBAD71A01B6985FE84C95A70EB132882F88C0A59A55"
@@ -92,7 +90,7 @@ func decryptText(encryptedText, passphrase string) (string, error) {
 	return decryptAES(salt, iv, passphrase, encryptedText, keySize, iterCount)
 }
 
-// Process the encoded JSON string
+// Processa o JSON encriptado
 func decryptJSON(encodedJSONStr string) (ApiCardapio, error) {
 	const markerB64 = "RzJiMVVGWU1Zak5WaVBaWTZiU3B2SG5OWXhI"
 	marker, err := base64.StdEncoding.DecodeString(markerB64)
@@ -117,10 +115,10 @@ func decryptJSON(encodedJSONStr string) (ApiCardapio, error) {
 		var result ApiCardapio
 		err = json.Unmarshal([]byte(decryptedText), &result)
 		if err != nil {
-			fmt.Println(decryptedText)
+			//fmt.Println(decryptedText)
 			return nil, err
 		}
-		fmt.Println(decryptedText)
+		//fmt.Println(decryptedText)
 		return result, nil
 	}
 	return nil, nil
