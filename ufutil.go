@@ -42,9 +42,9 @@ type Usuario struct {
 }
 
 type resultadoIdentidade struct {
-	IdentidadeDigital        IdentidadeDigital `json:"identidadeDigital"`
-	DocumentoArquivoTOResult any               `json:"documentoArquivoTOResult"`
-	DataNascimentoString     nullJson          `json:"dataNascimentoString"`
+	IdentidadeDigital        *IdentidadeDigital `json:"identidadeDigital"`
+	DocumentoArquivoTOResult any                `json:"documentoArquivoTOResult"`
+	DataNascimentoString     *string            `json:"dataNascimentoString"`
 }
 type IdentidadeDigital struct {
 	ID                int    `json:"id"`
@@ -191,32 +191,6 @@ func CardapioDoDiaTodosCampi() (ApiCardapio, error) {
 	return decryptBody, nil
 }
 
-type nullJson struct {
-	Value int
-	Valid bool
-	Set   bool
-}
-
-func (i *nullJson) UnmarshalJSON(data []byte) error {
-	// If this method was called, the value was set.
-	i.Set = true
-
-	if string(data) == "null" {
-		// The key was set to null
-		i.Valid = false
-		return nil
-	}
-
-	// The key isn't set to null
-	var temp int
-	if err := json.Unmarshal(data, &temp); err != nil {
-		return err
-	}
-	i.Value = temp
-	i.Valid = true
-	return nil
-}
-
 // A url deve parecer algo como: https://www.sistemas.ufu.br/valida-ufu/#/id-digital/XXXXXXXXXXXXXX
 func ValidarIdUfu(urlId string) (*IdentidadeDigital, error) {
 
@@ -246,11 +220,11 @@ func ValidarIdUfu(urlId string) (*IdentidadeDigital, error) {
 		return nil, err
 	}
 
-	if !jsonId.DataNascimentoString.Valid {
+	if jsonId.DataNascimentoString == nil {
 		return nil, errors.New("identidade invalida")
 	}
 
-	return &jsonId.IdentidadeDigital, nil
+	return jsonId.IdentidadeDigital, nil
 }
 
 func requisiçãoGenerica(url, meteodo string, corpo io.Reader) (*http.Response, error) {

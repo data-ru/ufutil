@@ -2,6 +2,7 @@ package ufutil
 
 import (
 	"encoding/json"
+	"runtime/debug"
 	"testing"
 )
 
@@ -42,8 +43,9 @@ func TestCardapioCampi(t *testing.T) {
 }
 
 func TestValidarId(t *testing.T) {
-	v, err := ValidarIdUfu("https://www.sistemas.ufu.br/valida-ufu/#/id-digital/XXXX")
+	v, err := ValidarIdUfu("https://www.sistemas.ufu.br/valida-ufu/#/id-digital/XXX")
 	if err != nil {
+		debug.PrintStack()
 		t.Fatal(err)
 	}
 	e, _ := json.Marshal(v)
