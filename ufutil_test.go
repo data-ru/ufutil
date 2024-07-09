@@ -1,6 +1,9 @@
 package ufutil
 
-import "testing"
+import (
+	"encoding/json"
+	"testing"
+)
 
 func TestLogin(t *testing.T) {
 	loginer := Usuario{
@@ -36,4 +39,13 @@ func TestCardapioCampi(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log(a)
+}
+
+func TestValidarId(t *testing.T) {
+	v, err := ValidarIdUfu("https://www.sistemas.ufu.br/valida-ufu/#/id-digital/XXXX")
+	if err != nil {
+		t.Fatal(err)
+	}
+	e, _ := json.Marshal(v)
+	t.Logf("%s", e)
 }

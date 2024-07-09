@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
+	"path"
 	"runtime"
 	"strings"
 	"time"
@@ -37,6 +39,30 @@ type IdUfu struct {
 type Usuario struct {
 	Usuario string `json:"uid"`
 	Senha   string `json:"senha"`
+}
+
+type resultadoIdentidade struct {
+	IdentidadeDigital        IdentidadeDigital `json:"identidadeDigital"`
+	DocumentoArquivoTOResult any               `json:"documentoArquivoTOResult"`
+	DataNascimentoString     nullJson          `json:"dataNascimentoString"`
+}
+type IdentidadeDigital struct {
+	ID                int    `json:"id"`
+	Matricula         string `json:"matricula"`
+	Nome              string `json:"nome"`
+	NomePai           string `json:"nomePai"`
+	NomeMae           string `json:"nomeMae"`
+	Rg                string `json:"rg"`
+	OrgaoEmissor      string `json:"orgaoEmissor"`
+	Cpf               string `json:"cpf"`
+	Naturalidade      string `json:"naturalidade"`
+	Vinculo           string `json:"vinculo"`
+	DataNascimento    int64  `json:"dataNascimento"`
+	CodigoBarra       string `json:"codigoBarra"`
+	Informacao        string `json:"informacao"`
+	SituacaoDescricao string `json:"situacaoDescricao"`
+	Situacao          int    `json:"situacao"`
+	Foto              string `json:"foto"`
 }
 
 /*type resLoginMobile struct {
@@ -163,6 +189,68 @@ func CardapioDoDiaTodosCampi() (ApiCardapio, error) {
 		Pratos: decryptBody,
 	}, nil*/
 	return decryptBody, nil
+}
+
+type nullJson struct {
+	Value int
+	Valid bool
+	Set   bool
+}
+
+func (i *nullJson) UnmarshalJSON(data []byte) error {
+	// If this method was called, the value was set.
+	i.Set = true
+
+	if string(data) == "null" {
+		// The key was set to null
+		i.Valid = false
+		return nil
+	}
+
+	// The key isn't set to null
+	var temp int
+	if err := json.Unmarshal(data, &temp); err != nil {
+		return err
+	}
+	i.Value = temp
+	i.Valid = true
+	return nil
+}
+
+// A url deve parecer algo como: https://www.sistemas.ufu.br/valida-ufu/#/id-digital/XXXXXXXXXXXXXX
+func ValidarIdUfu(urlId string) (*IdentidadeDigital, error) {
+
+	_, err := url.Parse(urlId) //Valida a URL
+	if err != nil {
+		return nil, err
+	}
+	id := path.Base(urlId) //Obtem o ID da URL: XXXXXXXXXXXXXX
+
+	res, err := requisiçãoGenerica("https://www.sistemas.ufu.br/valida-gateway/id-digital/buscarDadosIdDigital?idIdentidade="+id, http.MethodGet, nil)
+	if err != nil {
+		return nil, err
+	}
+	corpo, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != 200 {
+		return nil, fmt.Errorf("servidor retornou o código http %v", res.StatusCode)
+	}
+
+	var jsonId resultadoIdentidade
+	err = json.Unmarshal(corpo, &jsonId)
+	if err != nil {
+		return nil, err
+	}
+
+	if !jsonId.DataNascimentoString.Valid {
+		return nil, errors.New("identidade invalida")
+	}
+
+	return &jsonId.IdentidadeDigital, nil
 }
 
 func requisiçãoGenerica(url, meteodo string, corpo io.Reader) (*http.Response, error) {
