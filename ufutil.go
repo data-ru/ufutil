@@ -162,6 +162,8 @@ func Login(infoUsuario Usuario) (*IdUfu, error) {
 	return &informaçõesUsuario, nil
 }
 
+var ErrNãoHáRefeições = errors.New("não há refeições agendadas para hoje")
+
 func CardapioDoDiaTodosCampi() (ApiCardapio, error) {
 	resp, err := requisiçãoGenerica("https://www.sistemas.ufu.br/mobile-gateway/api/cardapios/", http.MethodGet, nil)
 	if err != nil {
@@ -175,19 +177,9 @@ func CardapioDoDiaTodosCampi() (ApiCardapio, error) {
 
 	decryptBody, err := decryptJSON(string(bodyResp))
 	if err != nil {
-		return nil, err
-	}
-	/*restaurantesId := make(map[string]int, 0)
-	restaurantesName := make([]string, 0)
-	for n, v := range decryptBody {
-		restaurantesName = append(restaurantesName, v.Local)
-		restaurantesId[v.Local] = n
+		return nil, ErrNãoHáRefeições
 	}
 
-	return &Cardapio{
-		Lugar:  restaurantesId,
-		Pratos: decryptBody,
-	}, nil*/
 	return decryptBody, nil
 }
 
